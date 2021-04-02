@@ -1,21 +1,26 @@
 ﻿@page "/pagina1"
 
+@using Tarea9.Data
+@inject ApiCedulaService ApiCedulaService
+
 <h3>Registrar vacuna a domicilio</h3>
 
-<form>
+<form class="w-75">
     <div class="mb-3">
         <label for="txtcedula" class="form-label">Cédula</label>
         <input type="text" class="form-control" id="txtcedula" @bind-value="cedula">
+        <br>
+        <button class="btn btn-secondary" @onclick="ValidarCedula" type="button">verificar</button>
     </div>
 
     <div class="mb-3">
         <label for="txtnombre" class="form-label">Nombre</label>
-        <input type="text" class="form-control" id="txtnombre" @bind-value="nombre">
+        <input type="text" class="form-control" id="txtnombre" @bind-value="nombre" disabled>
     </div>
 
     <div class="mb-3">
         <label for="txtapellido" class="form-label">Apellido</label>
-        <input type="text" class="form-control" id="txtapellido" @bind-value="apellido">
+        <input type="text" class="form-control" id="txtapellido" @bind-value="apellido" disabled>
     </div>
 
     <div class="mb-3">
@@ -25,12 +30,12 @@
 
     <div class="mb-3">
         <label for="txtcorreo" class="form-label">Correo electrónico</label>
-        <input type="email" class="form-control" id="txtcorreo" @bind-value="correo">
+        <input type="email" class="form-control" id="txtcorreo" @bind-value="correo" disabled>
     </div>
 
     <div class="mb-3">
         <label for="txtfecha" class="form-label">Fecha de nacimiento</label>
-        <input type="date" class="form-control" id="txtfecha" @bind-value="date">
+        <input type="date" class="form-control" id="txtfecha" @bind-value="fechaNacimiento" disabled>
     </div>
 
     <div class="mb-3">
@@ -79,6 +84,8 @@
 </form>
 
 @code {
+    [Inject]
+    public IJSRuntime JS { get; set; }
 
     int zoom = 7;
 
@@ -90,8 +97,7 @@
 
     string correo;
 
-    static DateTime date;
-    string fecha = date.ToString();
+    DateTime fechaNacimiento;
 
     string tsangre;
     string radio;
@@ -111,4 +117,19 @@
 
     }
 
+    public async Task ValidarCedula()
+    {
+        var apiContent = await ApiCedulaService.GetDatosAsync(cedula);
+
+        if (apiContent == null)
+        {
+            await JS.InvokeVoidAsync("alert", "Debe ingresar una cedula valida");
+        }
+        else
+        {
+            nombre = apiContent.Nombres;
+            apellido = $"{apiContent.Apellido1} {apiContent.Apellido2}";
+            fechaNacimiento = apiContent.FechaNacimiento;
+        }
+    }
 }
