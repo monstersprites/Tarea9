@@ -1,0 +1,114 @@
+﻿@page "/pagina1"
+
+<h3>Registrar vacuna a domicilio</h3>
+
+<form>
+    <div class="mb-3">
+        <label for="txtcedula" class="form-label">Cédula</label>
+        <input type="text" class="form-control" id="txtcedula" @bind-value="cedula">
+    </div>
+
+    <div class="mb-3">
+        <label for="txtnombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" id="txtnombre" @bind-value="nombre">
+    </div>
+
+    <div class="mb-3">
+        <label for="txtapellido" class="form-label">Apellido</label>
+        <input type="text" class="form-control" id="txtapellido" @bind-value="apellido">
+    </div>
+
+    <div class="mb-3">
+        <label for="txttelefono" class="form-label">Teléfono</label>
+        <input type="number" class="form-control" id="txttelefono" @bind-value="telefono">
+    </div>
+
+    <div class="mb-3">
+        <label for="txtcorreo" class="form-label">Correo electrónico</label>
+        <input type="email" class="form-control" id="txtcorreo" @bind-value="correo">
+    </div>
+
+    <div class="mb-3">
+        <label for="txtfecha" class="form-label">Fecha de nacimiento</label>
+        <input type="date" class="form-control" id="txtfecha" @bind-value="date">
+    </div>
+
+    <div class="mb-3">
+        <label for="txtsangre" class="form-label">Tipo de sangre</label>
+        <select id="txtsangre" @bind="tsangre">
+            <option value="null" selected>Seleccione el tipo de sangre</option>
+            <option value="O negativo">O negativo</option>
+            <option value="O positivo">O positivo</option>
+            <option value="A negativo">A negativo</option>
+            <option value="A positivo">A positivo</option>
+            <option value="B negativo">B negativo</option>
+            <option value="B positivo">B positivo</option>
+            <option value="AB negativo">AB negativo</option>
+            <option value="AB positivo">AB positivo</option>
+        </select>
+    </div>
+
+    <RadzenGoogleMap style="height: 400px" Zoom=@zoom Center=@(new GoogleMapPosition() { Lat = 18.98367097987177, Lng = -70.45763034294242 }) MapClick=@OnMapClick>
+        <Markers>
+            <RadzenGoogleMapMarker Position=@(new GoogleMapPosition() { Lat = latitud, Lng=longitud })/>
+        </Markers>
+    </RadzenGoogleMap>
+
+      <label class="form-check-label">¿Ha tenido COVID-19?</label>
+
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="radiobuttons" id="radio1" @bind="radio">
+        <label class="form-check-label" for="radio1">
+            No
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="radiobuttons" id="radio2" @bind="radio" checked>
+        <label class="form-check-label" for="radio2">
+            Si
+        </label>
+    </div>
+
+    <div class="mb-3">
+        <label for="Textarea1" class="form-label">Justifique porque deben vacunarlo en su casa</label>
+        <textarea class="form-control" id="Textarea1" rows="3" @bind="justificacion"></textarea>
+    </div>
+
+    <button class="btn btn-primary mb-3" @onclick="registrarSolicitud">Confirmar</button>
+
+</form>
+
+@code {
+
+    int zoom = 7;
+
+    string cedula;
+    string nombre;
+    string apellido;
+
+    int telefono;
+
+    string correo;
+
+    static DateTime date;
+    string fecha = date.ToString();
+
+    string tsangre;
+    string radio;
+    string justificacion;
+
+    double latitud;
+    double longitud;
+
+    void OnMapClick(GoogleMapClickEventArgs args)
+    {
+        latitud = args.Position.Lat;
+        longitud = args.Position.Lng;
+    }
+
+    public void registrarSolicitud()
+    {
+
+    }
+
+}
