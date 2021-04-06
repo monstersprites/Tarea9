@@ -2,6 +2,7 @@
 @using Tarea9.Data
 @using Newtonsoft.Json;
 @using System.Net;
+@using System.Net.Mail;
 @inject ApiCedulaService ApiCedulaService
 
 <h3>Registrar vacuna a domicilio</h3>
@@ -56,18 +57,18 @@
 
     <RadzenGoogleMap style="height: 400px" Zoom=@zoom Center=@(new GoogleMapPosition() { Lat = 18.98367097987177, Lng = -70.45763034294242 }) MapClick=@OnMapClick>
         <Markers>
-            <RadzenGoogleMapMarker Position=@(new GoogleMapPosition() { Lat = latitud, Lng=longitud })/>
+            <RadzenGoogleMapMarker Position=@(new GoogleMapPosition() { Lat = latitud, Lng=longitud }) />
         </Markers>
     </RadzenGoogleMap>
 
-      <label class="form-check-label">¿Ha tenido COVID-19?</label>
+    <label class="form-check-label">¿Ha tenido COVID-19?</label>
 
     <div class="form-check">
         <RadzenRadioButtonList @bind-Value=@radio TValue="int" Orientation="Orientation.Vertical">
             <Items>
                 <RadzenRadioButtonListItem Text="No" Value="1" />
                 <RadzenRadioButtonListItem Text="Si" Value="2" />
-             </Items>
+            </Items>
         </RadzenRadioButtonList>
     </div>
 
@@ -139,6 +140,7 @@
         WebClient cliente = new WebClient();
         var datos = cliente.DownloadString(API);
 
+        enviarCorreo();
     }
 
     public async Task ValidarCedula()
@@ -156,4 +158,41 @@
             fechaNacimiento = apiContent.FechaNacimiento;
         }
     }
+
+    public void enviarCorreo()
+    {
+
+        try
+        {
+
+            using (MailMessage mail = new MailMessage())
+            {
+                mail.From = new MailAddress("smexample0@gmail.com");
+                mail.To.Add(correo);
+                mail.Subject = "Solicitud vacuna a domicilio";
+                mail.Body =
+                    "<h2>Confirmación solicitud vacuna a domicilio</h2>" + "\n" +
+                    $"<h6>Gracias por preferirnos {nombre} {apellido} con este correo confirmamos su solicitud <br/>" +
+                    $"de su vacunación a domicilio.</h6>";
+
+                mail.IsBodyHtml = true;
+
+                using (SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587))
+                {
+                    smtp.Credentials = new System.Net.NetworkCredential("smexample0@gmail.com","enviarcorreos");
+                    smtp.EnableSsl = true;
+                    smtp.Send(mail);
+                }
+
+            }
+
+        }
+        catch (Exception)
+        {
+
+        }
+
+
+    }
+
 }
