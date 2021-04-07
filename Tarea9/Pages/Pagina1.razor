@@ -142,7 +142,7 @@
 
         if (IsNotNullOrEmpty(tsangre) && IsNotNullOrEmpty(radio_respuesta) && mapa_clickado > 0)
         {
-            string API = $"https://api-tarea9.herokuapp.com/api/Registrar_P/{cedula}/{nombre}/{apellido}/{fechaNacimiento}/{telefono}/{correo}/{tsangre}/None/None/{latitud}/{longitud}/{radio_respuesta}/{justificacion}"
+            string API = "https://api-tarea9.herokuapp.com/api/Registrar_P/" + $"{cedula}/{nombre}/{apellido}/{fechaNacimiento}/{telefono}/{correo}/{tsangre}/None/None/{latitud}/{longitud}/{radio_respuesta}/{justificacion}"
                             .Replace(" ", "%20")
                             .Replace("@", "%40")
                             .Replace(":", "%3A");
