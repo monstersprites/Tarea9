@@ -142,20 +142,24 @@
 
         if (IsNotNullOrEmpty(tsangre) && IsNotNullOrEmpty(radio_respuesta) && mapa_clickado > 0)
         {
-            string API = "https://api-tarea9.herokuapp.com/api/Registrar_P/" + $"{cedula}/{nombre}/{apellido}/{fechaNacimiento}/{telefono}/{correo}/{tsangre}/None/None/{latitud}/{longitud}/{radio_respuesta}/{justificacion}"
+            string API = "https://api-tarea9.herokuapp.com/api/Registrar_P/" + $"{cedula}/{nombre}/{apellido}/{fechaNacimiento.ToString().Replace("/", "-")}/{telefono}/{correo}/{tsangre}/None/None/{latitud}/{longitud}/{radio_respuesta}/{justificacion}"
                             .Replace(" ", "%20")
                             .Replace("@", "%40")
                             .Replace(":", "%3A");
 
             WebClient cliente = new WebClient();
             string datos = await cliente.DownloadStringTaskAsync(API);
-
+            
             Mensaje mensaje = JsonConvert.DeserializeObject<Mensaje>(datos);
 
             await JS.InvokeVoidAsync("alert", mensaje.mensaje);
 
             if (mensaje.mensaje != "Usuario ya se vacuno")
                 await enviarCorreo();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Debe llenar todos los campos");
         }
     }
 
