@@ -1,7 +1,8 @@
 ﻿@page "/pagina1"
+
 @using Tarea9.Data
-@using Newtonsoft.Json;
 @using System.Net;
+@using System.Web;
 @using System.Net.Mail;
 @inject ApiCedulaService ApiCedulaService
 
@@ -10,34 +11,34 @@
 <form class="w-75">
     <div class="mb-3">
         <label for="txtcedula" class="form-label">Cédula</label>
-        <input type="text" class="form-control" id="txtcedula" @bind-value="cedula">
+        <input type="text" class="form-control" id="txtcedula" @bind-value="cedula" required>
         <br>
         <button class="btn btn-secondary" @onclick="ValidarCedula" type="button">verificar</button>
     </div>
 
     <div class="mb-3">
         <label for="txtnombre" class="form-label">Nombre</label>
-        <input type="text" class="form-control" id="txtnombre" @bind-value="nombre" disabled>
+        <input type="text" class="form-control" id="txtnombre" @bind-value="nombre" disabled required>
     </div>
 
     <div class="mb-3">
         <label for="txtapellido" class="form-label">Apellido</label>
-        <input type="text" class="form-control" id="txtapellido" @bind-value="apellido" disabled>
+        <input type="text" class="form-control" id="txtapellido" @bind-value="apellido" disabled required>
     </div>
 
     <div class="mb-3">
         <label for="txttelefono" class="form-label">Teléfono</label>
-        <input type="number" class="form-control" id="txttelefono" @bind-value="telefono">
+        <input type="text" class="form-control" id="txttelefono" @bind-value="telefono" pattern="[0-9]+" required>
     </div>
 
     <div class="mb-3">
         <label for="txtcorreo" class="form-label">Correo electrónico</label>
-        <input type="email" class="form-control" id="txtcorreo" @bind-value="correo">
+        <input type="email" class="form-control" id="txtcorreo" @bind-value="correo" placeholder="sample@sample.com" required>
     </div>
 
     <div class="mb-3">
         <label for="txtfecha" class="form-label">Fecha de nacimiento</label>
-        <input type="date" class="form-control" id="txtfecha" @bind-value="fechaNacimiento" disabled>
+        <input type="date" class="form-control" id="txtfecha" @bind-value="fechaNacimiento" disabled required>
     </div>
 
     <div class="mb-3">
@@ -54,19 +55,21 @@
             <option value="AB positivo">AB positivo</option>
         </select>
     </div>
-
-    <RadzenGoogleMap style="height: 400px" Zoom=@zoom Center=@(new GoogleMapPosition() { Lat = 18.98367097987177, Lng = -70.45763034294242 }) MapClick=@OnMapClick>
-        <Markers>
-            <RadzenGoogleMapMarker Position=@(new GoogleMapPosition() { Lat = latitud, Lng=longitud }) />
-        </Markers>
-    </RadzenGoogleMap>
+    
+    <div class="mb-3">
+        <label for="map" class="form-label">Seleccione una ubicacion en el mapa</label>
+        <RadzenGoogleMap id="map" style="height: 400px" Zoom=@zoom Center=@(new GoogleMapPosition() { Lat = 18.98367097987177, Lng = -70.45763034294242 }) MapClick=@OnMapClick>
+            <Markers>
+                <RadzenGoogleMapMarker Position=@(new GoogleMapPosition() { Lat = latitud, Lng=longitud }) />
+            </Markers>
+        </RadzenGoogleMap>
+    </div>
 
     <label class="form-check-label">¿Ha tenido COVID-19?</label>
-
     <div class="form-check">
         <RadzenRadioButtonList @bind-Value=@radio TValue="int" Orientation="Orientation.Vertical">
             <Items>
-                <RadzenRadioButtonListItem Text="No" Value="1" />
+                <RadzenRadioButtonListItem Text="No" Value="1" selected />
                 <RadzenRadioButtonListItem Text="Si" Value="2" />
             </Items>
         </RadzenRadioButtonList>
@@ -74,11 +77,10 @@
 
     <div class="mb-3">
         <label for="Textarea1" class="form-label">Justifique porque deben vacunarlo en su casa</label>
-        <textarea class="form-control" id="Textarea1" rows="3" @bind="justificacion"></textarea>
+        <textarea class="form-control" id="Textarea1" rows="3" @bind="justificacion" required></textarea>
     </div>
 
     <button class="btn btn-primary mb-3" @onclick="registrarSolicitud">Confirmar</button>
-
 </form>
 
 <br />
@@ -107,7 +109,7 @@
 
     string correo;
 
-    DateTime fechaNacimiento;
+    DateTime fechaNacimiento = new DateTime();
 
     string tsangre;
     int radio;
@@ -118,13 +120,16 @@
     double latitud;
     double longitud;
 
+    int mapa_clickado;
+
     void OnMapClick(GoogleMapClickEventArgs args)
     {
+        mapa_clickado++;
         latitud = args.Position.Lat;
         longitud = args.Position.Lng;
     }
 
-    public void registrarSolicitud()
+    public async Task registrarSolicitud()
     {
         if (radio == 1)
         {
@@ -135,12 +140,23 @@
             radio_respuesta = "Si";
         }
 
-        var API = $"https://api-tarea9.herokuapp.com/api/Registrar_P/{cedula}/{nombre}/{apellido}/{fechaNacimiento}/{telefono}/{correo}/{tsangre}/null/null/{latitud}/{longitud}/{radio_respuesta}/{justificacion}";
+        if (IsNotNullOrEmpty(tsangre) && IsNotNullOrEmpty(radio_respuesta) && mapa_clickado > 0)
+        {
+            string API = $"https://api-tarea9.herokuapp.com/api/Registrar_P/{cedula}/{nombre}/{apellido}/{fechaNacimiento}/{telefono}/{correo}/{tsangre}/None/None/{latitud}/{longitud}/{radio_respuesta}/{justificacion}"
+                            .Replace(" ", "%20")
+                            .Replace("@", "%40")
+                            .Replace(":", "%3A");
 
-        WebClient cliente = new WebClient();
-        var datos = cliente.DownloadString(API);
+            WebClient cliente = new WebClient();
+            string datos = await cliente.DownloadStringTaskAsync(API);
 
-        enviarCorreo();
+            Mensaje mensaje = JsonConvert.DeserializeObject<Mensaje>(datos);
+
+            await JS.InvokeVoidAsync("alert", mensaje.mensaje);
+
+            if (mensaje.mensaje != "Usuario ya se vacuno")
+                await enviarCorreo();
+        }
     }
 
     public async Task ValidarCedula()
@@ -159,12 +175,10 @@
         }
     }
 
-    public void enviarCorreo()
+    public async Task enviarCorreo()
     {
-
         try
         {
-
             using (MailMessage mail = new MailMessage())
             {
                 mail.From = new MailAddress("smexample0@gmail.com");
@@ -179,20 +193,22 @@
 
                 using (SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587))
                 {
-                    smtp.Credentials = new System.Net.NetworkCredential("smexample0@gmail.com","enviarcorreos");
+                    smtp.Credentials = new NetworkCredential("smexample0@gmail.com","enviarcorreos");
                     smtp.EnableSsl = true;
-                    smtp.Send(mail);
+                    await smtp.SendMailAsync(mail);
                 }
-
             }
-
         }
         catch (Exception)
         {
 
         }
-
-
     }
 
+    public bool IsNotNullOrEmpty(string str) => str != null && str.Any() ? true : false;
+
+    public class Mensaje
+    {
+        public string mensaje { get; set; }
+    }
 }
